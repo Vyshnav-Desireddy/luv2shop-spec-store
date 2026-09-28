@@ -1,0 +1,1 @@
+# luv2shop-spec-store
