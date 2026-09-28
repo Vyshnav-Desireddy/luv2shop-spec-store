@@ -1,0 +1,190 @@
+openapi: 3.0.3
+info:
+  title: LUV2SHOP Product Catalog API
+  description: >
+    Read-only product catalog API owned by product-service. Backed by in-memory
+    data loaded at startup from a bundled JSON file (no database). See
+    specs/001-product-catalog/spec.md and data-model.md in the luv2shop-spec-store
+    repo for the full specification this contract implements.
+  version: 1.0.0
+servers:
+  - url: /api
+paths:
+  /products:
+    get:
+      operationId: listProducts
+      summary: List products, optionally filtered by category or name search, paged.
+      description: >
+        Returns a paged list of products sorted by name ascending by default.
+        If `name` is supplied, the search runs across the whole catalog and any
+        `category` parameter is ignored (name search and category filtering are
+        mutually exclusive in the same request). If neither `category` nor
+        `name` is supplied, all products are returned, paged.
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - name: category
+          in: query
+          required: false
+          description: >
+            Category id to filter by. Ignored if `name` is also supplied.
+          schema:
+            type: string
+        - name: name
+          in: query
+          required: false
+          description: >
+            Case-insensitive substring match against product name. When
+            supplied, search runs across the entire catalog and `category` is
+            ignored.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: >
+            A page of matching products. Empty `items` (not an error) when a
+            category or name search matches nothing, or when `page` is beyond
+            the last page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductSummaryPage'
+        '400':
+          description: Invalid paging parameters (e.g., negative page, size out of range).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /products/{id}:
+    get:
+      operationId: getProductById
+      summary: Get a single product's details.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The product's full details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDetail'
+        '404':
+          description: No product exists with the given id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /categories:
+    get:
+      operationId: listCategories
+      summary: List all categories.
+      description: >
+        Returns the full, unpaged list of categories, for building a category
+        menu. Returns an empty array (not an error) if no categories exist.
+      responses:
+        '200':
+          description: All categories in the catalog.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+components:
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      required: false
+      description: Zero-based page number. Defaults to 0.
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    SizeParam:
+      name: size
+      in: query
+      required: false
+      description: Page size. Defaults to 20; maximum 50.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
+        default: 20
+  schemas:
+    Category:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          example: cat-electronics
+        name:
+          type: string
+          example: Electronics
+    ProductSummary:
+      type: object
+      required: [id, name, price, imageUrl, unitsInStock, categoryId]
+      properties:
+        id:
+          type: string
+          example: prod-0001
+        name:
+          type: string
+          example: Wireless Bluetooth Headphones
+        price:
+          type: number
+          format: double
+          description: Price in INR.
+          example: 1999.00
+        imageUrl:
+          type: string
+          example: https://example.com/images/prod-0001.jpg
+        unitsInStock:
+          type: integer
+          minimum: 0
+          example: 42
+        categoryId:
+          type: string
+          example: cat-electronics
+    ProductDetail:
+      allOf:
+        - $ref: '#/components/schemas/ProductSummary'
+        - type: object
+          required: [description]
+          properties:
+            description:
+              type: string
+              example: Over-ear wireless headphones with 30-hour battery life and active noise cancellation.
+    ProductSummaryPage:
+      type: object
+      required: [items, page, size, totalItems, totalPages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductSummary'
+        page:
+          type: integer
+          minimum: 0
+        size:
+          type: integer
+          minimum: 1
+          maximum: 50
+        totalItems:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+    ErrorResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          example: Product not found

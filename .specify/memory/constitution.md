@@ -1,16 +1,21 @@
 <!--
 Sync Impact Report
 ==================
-Version change: (none) → 1.0.0
-Bump rationale: Initial ratification — first formal adoption of the constitution for this project.
-Modified principles: N/A (initial creation)
-Added sections:
-  - Core Principles: I. Spec-First Development, II. Contract-Driven Service Communication,
-    III. Service & Data Independence, IV. Test-Backed Acceptance Criteria, V. Simplicity (YAGNI)
-  - Technology Stack Constraints
-  - Development Workflow
-  - Governance
-Removed sections: N/A (initial creation)
+Version change: 1.0.0 → 1.1.0
+Bump rationale: MINOR — Technology Stack Constraints materially changed (MySQL replaced with local
+  JSON file storage loaded into memory at startup); Principle III reworded to be storage-agnostic
+  so it does not need to change again on future storage swaps. No principle was removed or
+  redefined in a backward-incompatible way; Principle III's independence guarantee is unchanged.
+Modified principles:
+  - III. Service & Data Independence → wording generalized from "database"/"database schema" to
+    "data store" so it covers the current local-JSON-file storage without implying a database
+    exists; the independence rule itself (no cross-service reads/writes, no shared storage) is
+    unchanged.
+Added sections: none
+Removed sections: none
+Modified sections:
+  - Technology Stack Constraints: removed MySQL/database requirement; added local JSON file
+    storage per service, loaded into memory at startup, no database install or login required.
 Follow-up TODOs: none
 ==================
 -->
@@ -40,12 +45,13 @@ are the only reliable, versionable record of the integration surface between the
 
 ### III. Service & Data Independence
 `product-service`, `order-service`, and `customer-service` each live in their own repository and
-own their own database. No service may read from or write to another service's database directly,
-and no database schema may be shared across services. All cross-service data access MUST go
-through the REST APIs defined under Principle II.
+own their own data store, whatever concrete form it currently takes (see Technology Stack
+Constraints). No service may read from or write to another service's data store directly, and no
+storage — schema, files, or otherwise — may be shared across services. All cross-service data
+access MUST go through the REST APIs defined under Principle II.
 Rationale: Independent ownership of code and data is what makes these three deployable units
-actual microservices rather than a distributed monolith; direct database coupling defeats that
-boundary silently and is hard to detect later.
+actual microservices rather than a distributed monolith; direct storage coupling defeats that
+boundary silently and is hard to detect later, regardless of what storage technology is in use.
 
 ### IV. Test-Backed Acceptance Criteria (NON-NEGOTIABLE)
 Every acceptance criterion defined in a spec MUST have at least one corresponding automated test
@@ -67,11 +73,16 @@ requirements in the spec store, not anticipated ones.
 All three services (`product-service`, `order-service`, `customer-service`) MUST be built on:
 - **Language/Runtime**: Java 21
 - **Framework**: Spring Boot 3
-- **Database**: MySQL, one dedicated schema/instance per service (see Principle III)
+- **Data Storage**: No database, for now. Each service stores its data in local JSON files inside
+  its own repo, loaded into memory at startup. There is no database engine to install and no
+  database login/credentials to manage. Each service still owns its own data files exclusively and
+  MUST NOT read another service's data files (see Principle III); this is a storage mechanism
+  change only, not a relaxation of data independence.
 
 Specs and OpenAPI contracts authored in this repo MUST be technically feasible within this stack.
-Any proposal to deviate from this stack for a given service requires an explicit constitution
-amendment (see Governance) before it can be reflected in that service's specs.
+Any proposal to deviate from this stack for a given service — including reintroducing a database —
+requires an explicit constitution amendment (see Governance) before it can be reflected in that
+service's specs.
 
 ## Development Workflow
 
@@ -105,4 +116,4 @@ once merged into this repo.
 service repo implementing them, MUST be checked against the Core Principles above. Any deviation
 MUST be called out explicitly and justified rather than silently introduced.
 
-**Version**: 1.0.0 | **Ratified**: 2026-09-28 | **Last Amended**: 2026-09-28
+**Version**: 1.1.0 | **Ratified**: 2026-09-28 | **Last Amended**: 2026-09-28
