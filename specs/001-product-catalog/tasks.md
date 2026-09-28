@@ -40,12 +40,12 @@ if the target repo's actual group/artifact id differs).
 
 **Purpose**: Project initialization and basic structure for `luv2shop-product-service`
 
-- [ ] T001 Create Maven project skeleton in `../luv2shop-product-service/pom.xml`: Java 21 source/target,
+- [X] T001 Create Maven project skeleton in `../luv2shop-product-service/pom.xml`: Java 21 source/target,
   `spring-boot-starter-parent` 3.x, `spring-boot-starter-web` and `spring-boot-starter-test`
   dependencies (plan.md Technical Context: Java 21, Spring Boot 3, Maven, Spring Web)
-- [ ] T002 [P] Create Spring Boot entry point in
+- [X] T002 [P] Create Spring Boot entry point in
   `../luv2shop-product-service/src/main/java/com/luv2shop/productservice/ProductServiceApplication.java`
-- [ ] T003 [P] Add `../luv2shop-product-service/src/main/resources/application.yml` with app name and
+- [X] T003 [P] Add `../luv2shop-product-service/src/main/resources/application.yml` with app name and
   server port configuration
 
 **Checkpoint**: Project builds and runs an empty Spring Boot app.
@@ -59,34 +59,34 @@ user story depends on. No user story work should begin until this phase is compl
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 [P] Create `Category` model in
+- [X] T004 [P] Create `Category` model in
   `../luv2shop-product-service/src/main/java/com/luv2shop/productservice/model/Category.java` with
   fields `id` (String, required, unique) and `name` (String, required) — data-model.md Category
-- [ ] T005 [P] Create `Product` model in
+- [X] T005 [P] Create `Product` model in
   `../luv2shop-product-service/src/main/java/com/luv2shop/productservice/model/Product.java` with
   fields `id` (String, required, unique), `name` (String, required), `description` (String,
   required), `price` (BigDecimal, required, "price >= 0"), `imageUrl` (String, required),
   `unitsInStock` (int, required, "unitsInStock >= 0"), `categoryId` (String, required, "must
   reference an existing Category.id in the same file") — data-model.md Product
-- [ ] T006 Create seed data file
+- [X] T006 Create seed data file
   `../luv2shop-product-service/src/main/resources/data/products.json` with exactly 4 categories
   (Books, Electronics, Clothing, Home & Kitchen) and ~20 products spread across them, all prices in
   INR, matching the `Category`/`Product` shapes from T004/T005 (plan.md Scope/Scale; data-model.md
   Seed Data Shape)
-- [ ] T007 Implement `CatalogRepository` in
+- [X] T007 Implement `CatalogRepository` in
   `../luv2shop-product-service/src/main/java/com/luv2shop/productservice/repository/CatalogRepository.java`:
   on construction/startup, load and deserialize `data/products.json` once via Jackson into an
   in-memory `List<Product>` pre-sorted by `name` ascending (case-insensitive), a `List<Category>`,
   and a `Map<String, Product>` keyed by `id` for O(1) detail lookups; validate on load that every
   `Product.categoryId` references an existing `Category.id` (research.md #1, #2; data-model.md
   Validation rules) (depends on T004, T005, T006)
-- [ ] T008 [P] Create response DTOs in
+- [X] T008 [P] Create response DTOs in
   `../luv2shop-product-service/src/main/java/com/luv2shop/productservice/model/dto/`:
   `ProductSummary` (`id`, `name`, `price`, `imageUrl`, `unitsInStock`, `categoryId`),
   `ProductDetail` (all `ProductSummary` fields plus `description`), `ProductSummaryPage` (`items`,
   `page`, `size`, `totalItems`, `totalPages`), `ErrorResponse` (`message`) — data-model.md Response
   DTO Shapes; contracts/openapi.yaml schemas
-- [ ] T009 Implement a `@ControllerAdvice` exception handler in
+- [X] T009 Implement a `@ControllerAdvice` exception handler in
   `../luv2shop-product-service/src/main/java/com/luv2shop/productservice/controller/ApiExceptionHandler.java`
   mapping a "product not found" condition to `404` with an `ErrorResponse` body (FR-006;
   contracts/openapi.yaml `/products/{id}` 404 response), and invalid paging parameters to `400`
@@ -109,27 +109,27 @@ error) result past the last page.
 
 > Write these tests FIRST, ensure they FAIL before implementation
 
-- [ ] T010 [P] [US1] Contract test in
+- [X] T010 [P] [US1] Contract test in
   `../luv2shop-product-service/src/test/java/com/luv2shop/productservice/controller/ProductListControllerTest.java`
   covering spec.md US1 acceptance scenarios 1–4: first page with more-pages indication, next page
   navigation, single page when catalog fits, default name-ascending sort (FR-001, FR-002, FR-010)
-- [ ] T011 [P] [US1] Unit test in
+- [X] T011 [P] [US1] Unit test in
   `../luv2shop-product-service/src/test/java/com/luv2shop/productservice/service/ProductPagingTest.java`
   covering default page size 20, maximum page size 50, and an empty page when requesting beyond the
   last page (FR-001, FR-008; spec.md Clarifications max page size = 50)
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Implement `ProductService.listProducts(int page, int size)` in
+- [X] T012 [US1] Implement `ProductService.listProducts(int page, int size)` in
   `../luv2shop-product-service/src/main/java/com/luv2shop/productservice/service/ProductService.java`:
   returns a name-ascending-sorted, paged `ProductSummaryPage`, defaulting `size` to 20, clamping/
   rejecting `size` above 50, and returning an empty page when `page` is beyond the last page
   (depends on T007, T008)
-- [ ] T013 [US1] Implement `ProductController` with `GET /api/products` (no filters yet) in
+- [X] T013 [US1] Implement `ProductController` with `GET /api/products` (no filters yet) in
   `../luv2shop-product-service/src/main/java/com/luv2shop/productservice/controller/ProductController.java`,
   binding `page` (default 0) and `size` (default 20, max 50) query params to `ProductService`
   (depends on T012)
-- [ ] T014 [US1] Add `page`/`size` request validation (page ≥ 0; 1 ≤ size ≤ 50) in
+- [X] T014 [US1] Add `page`/`size` request validation (page ≥ 0; 1 ≤ size ≤ 50) in
   `ProductController`, returning `400` with `ErrorResponse` via T009's handler on violation
   (depends on T013, T009)
 
@@ -147,7 +147,7 @@ returned; request an unknown id and confirm a `404` "not found" response.
 
 ### Tests for User Story 2 (REQUIRED — Constitution Principle IV)
 
-- [ ] T015 [P] [US2] Contract test in
+- [X] T015 [P] [US2] Contract test in
   `../luv2shop-product-service/src/test/java/com/luv2shop/productservice/controller/ProductDetailControllerTest.java`
   covering spec.md US2 acceptance scenarios: `200` with name/description/price/imageUrl/
   unitsInStock for an existing product id, and `404` with an `ErrorResponse` for a non-existent id
@@ -155,9 +155,9 @@ returned; request an unknown id and confirm a `404` "not found" response.
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Implement `ProductService.getById(String id)` returning an `Optional<ProductDetail>`
+- [X] T016 [US2] Implement `ProductService.getById(String id)` returning an `Optional<ProductDetail>`
   (empty when not found) in `ProductService.java` (depends on T007, T008)
-- [ ] T017 [US2] Add `GET /api/products/{id}` to `ProductController`, returning `200` with
+- [X] T017 [US2] Add `GET /api/products/{id}` to `ProductController`, returning `200` with
   `ProductDetail` when present or delegating to the `404` handler from T009 when absent (depends on
   T016, T009, T013)
 
@@ -175,7 +175,7 @@ products (or an unknown category id) and confirm an empty result, not an error.
 
 ### Tests for User Story 3 (REQUIRED — Constitution Principle IV)
 
-- [ ] T018 [P] [US3] Contract test in
+- [X] T018 [P] [US3] Contract test in
   `../luv2shop-product-service/src/test/java/com/luv2shop/productservice/controller/ProductCategoryFilterControllerTest.java`
   covering spec.md US3 acceptance scenarios: only-matching-category results sorted by name, and an
   empty result for a category with no products and for a category id that doesn't exist at all
@@ -183,9 +183,9 @@ products (or an unknown category id) and confirm an empty result, not an error.
 
 ### Implementation for User Story 3
 
-- [ ] T019 [US3] Extend `ProductService.listProducts` to accept an optional `categoryId` filter,
+- [X] T019 [US3] Extend `ProductService.listProducts` to accept an optional `categoryId` filter,
   still sorted and paged, in `ProductService.java` (depends on T012)
-- [ ] T020 [US3] Extend `GET /api/products` in `ProductController` to accept an optional `category`
+- [X] T020 [US3] Extend `GET /api/products` in `ProductController` to accept an optional `category`
   query param (depends on T019, T013)
 
 **Checkpoint**: User Stories 1, 2, and 3 are all independently functional.
@@ -202,18 +202,18 @@ returned; confirm an empty array (not an error) if no categories exist.
 
 ### Tests for User Story 4 (REQUIRED — Constitution Principle IV)
 
-- [ ] T021 [P] [US4] Contract test in
+- [X] T021 [P] [US4] Contract test in
   `../luv2shop-product-service/src/test/java/com/luv2shop/productservice/controller/CategoryControllerTest.java`
   covering spec.md US4 acceptance scenarios: full category list returned, and empty array when no
   categories exist (FR-009)
 
 ### Implementation for User Story 4
 
-- [ ] T022 [US4] Implement `CategoryService.listAll()` returning all categories from
+- [X] T022 [US4] Implement `CategoryService.listAll()` returning all categories from
   `CatalogRepository` in
   `../luv2shop-product-service/src/main/java/com/luv2shop/productservice/service/CategoryService.java`
   (depends on T007)
-- [ ] T023 [US4] Implement `CategoryController` with `GET /api/categories` in
+- [X] T023 [US4] Implement `CategoryController` with `GET /api/categories` in
   `../luv2shop-product-service/src/main/java/com/luv2shop/productservice/controller/CategoryController.java`
   (depends on T022)
 
@@ -232,23 +232,23 @@ non-matching term; confirm that supplying both `name` and `category` ignores `ca
 
 ### Tests for User Story 5 (REQUIRED — Constitution Principle IV)
 
-- [ ] T024 [P] [US5] Contract test in
+- [X] T024 [P] [US5] Contract test in
   `../luv2shop-product-service/src/test/java/com/luv2shop/productservice/controller/ProductSearchControllerTest.java`
   covering spec.md US5 acceptance scenarios: matching-term results sorted by name, empty result for
   a non-matching term, and identical results whether or not a `category` param is also supplied
   (FR-004; US5 acceptance scenario 3)
-- [ ] T025 [P] [US5] Unit test in
+- [X] T025 [P] [US5] Unit test in
   `../luv2shop-product-service/src/test/java/com/luv2shop/productservice/service/ProductSearchTest.java`
   covering case-insensitive substring matching and that `categoryId` is ignored whenever a `name`
   term is present (FR-004; research.md #4)
 
 ### Implementation for User Story 5
 
-- [ ] T026 [US5] Extend `ProductService.listProducts` to accept an optional `name` search term,
+- [X] T026 [US5] Extend `ProductService.listProducts` to accept an optional `name` search term,
   performing a case-insensitive substring match across the whole catalog and taking precedence over
   any supplied `categoryId` (i.e., `categoryId` is ignored when `name` is present), in
   `ProductService.java` (depends on T019)
-- [ ] T027 [US5] Extend `GET /api/products` in `ProductController` to accept an optional `name`
+- [X] T027 [US5] Extend `GET /api/products` in `ProductController` to accept an optional `name`
   query param (depends on T026, T020)
 
 **Checkpoint**: All five user stories are independently functional.
@@ -259,15 +259,15 @@ non-matching term; confirm that supplying both `name` and `category` ignores `ca
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T028 [P] Add `../luv2shop-product-service/README.md` documenting how to build and run the
+- [X] T028 [P] Add `../luv2shop-product-service/README.md` documenting how to build and run the
   service, referencing quickstart.md's validation scenarios
-- [ ] T029 [P] Add model validation unit tests in
+- [X] T029 [P] Add model validation unit tests in
   `../luv2shop-product-service/src/test/java/com/luv2shop/productservice/model/ProductValidationTest.java`
   for the data-model.md Validation rules: non-negative `price`, non-negative `unitsInStock`, and
   `categoryId` referential integrity at load time
-- [ ] T030 Manually run all quickstart.md validation scenarios against the running service and
+- [X] T030 Manually run all quickstart.md validation scenarios against the running service and
   confirm each matches its expected result
-- [ ] T031 Cross-check implemented request/response shapes against contracts/openapi.yaml
+- [X] T031 Cross-check implemented request/response shapes against contracts/openapi.yaml
   (`/products`, `/products/{id}`, `/categories`) for schema drift
 
 ---
